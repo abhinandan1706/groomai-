@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test File Upload</title>
+</head>
+<body>
+    <h2>Simple File Upload Test</h2>
+    
+    <form method="post" enctype="multipart/form-data" action="/">
+        <input type="file" name="file" accept="image/*" required>
+        <button type="submit">Upload</button>
+    </form>
+    
+    <div id="result">
+        {% if prediction %}
+            <h3>Result:</h3>
+            <pre>{{ prediction }}</pre>
+        {% endif %}
+    </div>
+    
+    <script>
+        console.log('Test upload page loaded');
+        
+        // Log form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            console.log('Form submitted');
+            const fileInput = document.querySelector('input[type="file"]');
+            console.log('File input:', fileInput);
+            console.log('Selected files:', fileInput.files);
+            if (fileInput.files.length > 0) {
+                console.log('File name:', fileInput.files[0].name);
+                console.log('File size:', fileInput.files[0].size);
+                console.log('File type:', fileInput.files[0].type);
+            }
+        });
+    </script>
+</body>
+</html>

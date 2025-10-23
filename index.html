@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GroomAI | Skin Type Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- General Styling & Variables --- */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f4f7f6;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --success-color: #28a745;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* --- Main Card Container --- */
+        .container {
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+        }
+
+        /* --- Header --- */
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .header p {
+            margin: 5px 0 30px;
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+
+        /* --- File Upload Area --- */
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 15px;
+            padding: 40px 20px;
+            cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover, .upload-area.drag-over {
+            border-color: var(--primary-color);
+            background-color: #f8f9fa;
+        }
+
+        .upload-area .icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+        }
+
+        .upload-area .upload-text {
+            margin-top: 15px;
+            font-weight: 500;
+        }
+        
+        .upload-area .upload-text span {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Hide the default file input */
+        #file-input {
+            display: none;
+        }
+
+        /* --- Image Preview --- */
+        #image-preview-container {
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+        }
+        
+        #image-preview {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            object-fit: cover;
+        }
+
+        /* --- Submit Button --- */
+        .predict-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .predict-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .predict-button:disabled {
+            background-color: var(--secondary-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* --- Spinner Animation --- */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+
+        .predict-button.loading .spinner {
+            display: block;
+        }
+
+        .predict-button.loading .button-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* --- Prediction Result --- */
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #eaf5ff;
+            border: 1px solid #bde0ff;
+        }
+        
+        #result h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>GroomAI ✨</h1>
+            <p>Upload an image to predict your skin type.</p>
+        </div>
+
+        <form id="upload-form" method="post" enctype="multipart/form-data">
+            
+            <label for="file-input" id="upload-area" class="upload-area">
+                <div class="icon">🖼️</div>
+                <div class="upload-text">
+                    <p><span>Browse</span> or drag & drop an image</p>
+                </div>
+            </label>
+            
+            <input type="file" name="file" id="file-input" accept="image/*" required>
+            
+            <div id="image-preview-container">
+                <img id="image-preview" src="#" alt="Image Preview"/>
+            </div>
+
+            <button type="submit" id="submit-button" class="predict-button">
+                <span class="button-text">Predict Skin Type</span>
+                <div class="spinner"></div>
+            </button>
+        </form>
+
+        {% if prediction %}
+            <div id="result">
+                <h3>{{ prediction }}</h3>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const uploadArea = document.getElementById('upload-area');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const submitButton = document.getElementById('submit-button');
+
+        // Function to show the selected image preview
+        const showPreview = (file) => {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreviewContainer.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        };
+        
+        // Event listener for file selection via browse button
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            showPreview(file);
+        });
+
+        // --- Drag and Drop Functionality ---
+
+        // Prevent default browser behavior
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+
+        // Highlight drop zone when item is dragged over
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.add('drag-over');
+            }, false);
+        });
+        
+        // Un-highlight drop zone when item leaves
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.remove('drag-over');
+            }, false);
+        });
+
+        // Handle dropped files
+        uploadArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                fileInput.files = files; // Assign dropped files to the input
+                showPreview(files[0]);
+            }
+        }, false);
+
+        // --- Form Submission Loading State ---
+        uploadForm.addEventListener('submit', () => {
+            // Check if a file is selected before showing loader
+            if (fileInput.files.length > 0) {
+                submitButton.classList.add('loading');
+                submitButton.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>
